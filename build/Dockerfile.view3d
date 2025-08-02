@@ -1,0 +1,20 @@
+# View3D application build
+# docker buildx build --platform linux/arm64 -f build/Dockerfile.view3d -t pchuan98/view3d-arm64 --load . --build-arg HTTPS_PROXY="" --build-arg HTTP_PROXY="" --build-arg BUILDKIT_MAX_PARALLELISM=12
+
+FROM pchuan98/occt
+
+# Set environment for OCCT (using /opt/occt path)
+ENV PKG_CONFIG_PATH="/opt/occt/lib/pkgconfig:$PKG_CONFIG_PATH"
+ENV CMAKE_PREFIX_PATH="/opt/occt:$CMAKE_PREFIX_PATH"
+ENV LD_LIBRARY_PATH="/opt/occt/lib:$LD_LIBRARY_PATH"
+
+WORKDIR /view3d
+COPY src/ ./src/
+
+WORKDIR /view3d/src
+RUN cmake -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/view3d \
+    -DOpenCASCADE_DIR=/opt/occt/lib/cmake/opencascade \
+    && cmake --build build -j$(nproc) \
+    && cmake --install build

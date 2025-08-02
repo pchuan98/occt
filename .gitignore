@@ -1,0 +1,16 @@
+.claude/
+CLAUDE.md
+src/**/*.[hH][pP][pP]
+
+# C/C++ files
+*.[ch]
+*.[ch]pp
+*.[ch]xx
+*.cc
+*.hh
+
+# Compiled files
+*.o
+*.obj
+*.exe
+*.out
