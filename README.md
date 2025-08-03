@@ -206,7 +206,7 @@ sudo apt install [missing-package]:arm64
 
 This documentation is available in:
 - [English](README.md)
-- [中文](readme_zh.md)
+- [中文](README_zh.md)
 
 ## License
 
