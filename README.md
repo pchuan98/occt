@@ -1,168 +1,158 @@
 # OCCT ARM64 Cross-Compilation Project
 
-This project provides a modular Docker-based cross-compilation setup for building Open CASCADE Technology (OCCT) libraries and View3D applications for ARM64 architecture, specifically targeting RK3566 devices with ARM Cortex-A55 processors and Mali G52 GPUs.
+This project provides a Docker-based cross-compilation setup for building Open CASCADE Technology (OCCT) libraries and View3D applications for ARM64 architecture, specifically targeting RK3566 devices with ARM Cortex-A55 processors and Mali G52 GPUs.
 
 ## Overview
 
 - **Target Platform**: RK3566 (ARM Cortex-A55) with Mali G52 GPU
 - **Operating System**: Debian 11 ARM64 with XFCE4 desktop environment
 - **Graphics**: OpenGL ES 3.2, Vulkan 1.1 support
-- **Build Method**: Modular Docker multi-stage cross-compilation
-- **OCCT Version**: 7.8.1
+- **Build Method**: Docker multi-stage cross-compilation
+- **OCCT Version**: 7.9.1
 - **Architecture**: Three-tier build system (Base → OCCT → View3D)
 
 ## Prerequisites
 
-- Windows 11 with WSL2 enabled
-- Docker installed and working
-- RK3566 target device with network access
-- Multi-architecture Docker support
+- Docker installed with buildx support
+- Multi-architecture Docker support (QEMU)
+- RK3566 target device with network access (for deployment)
 
 ## Quick Start
 
-### Option 1: Build All Components (Recommended)
+### Docker-based Cross-compilation
 
 ```bash
-# Build everything in sequence
-scripts/build_all.bat     # Windows
-./scripts/build_all.sh    # Linux
+# Windows
+scripts\build_occt.bat
+
+# Linux
+./scripts/build_occt.sh
 ```
 
-### Option 2: Build Individual Components
+This builds the OCCT ARM64 Docker image using `build/Dockerfile`.
+
+### Available Build Scripts
 
 ```bash
-# 1. Build base Debian image
-scripts/build_base.bat     # Windows
-./scripts/build_base.sh    # Linux
-
-# 2. Build OCCT libraries
-scripts/build_occt.bat     # Windows  
-./scripts/build_occt.sh    # Linux
-
-# 3. Build View3D application
-scripts/build_view3d.bat   # Windows
-./scripts/build_view3d.sh  # Linux
-```
-
-### Docker Images Created
-
-- `pchuan98/debian-builder11` - Base Debian with build tools
-- `pchuan98/occt` - OCCT libraries installed to `/opt/occt`
-- `pchuan98/view3d-arm64` - Complete application with View3D
-
-### Deploy to Target Device
-
-```bash
-# Transfer View3D application to RK3566
-scp -r view3d-arm64 user@rk3566-ip:/home/user/view3d
-
-# Install on target device
-sudo mv /home/user/view3d /opt/view3d
-sudo chmod -R 755 /opt/view3d
-export LD_LIBRARY_PATH=/opt/occt/lib:/opt/view3d/lib:$LD_LIBRARY_PATH
-```
-
-### Test Installation
-
-```bash
-# On RK3566 device - test OCCT
-/opt/occt/bin/draw.sh
-
-# Test View3D application
-/opt/view3d/bin/view3d
+# Individual component builds
+scripts/build_base.bat/.sh     # Base Debian 11 with build tools
+scripts/build_occt.bat/.sh     # OCCT libraries compilation
+scripts/build_view3d.bat/.sh   # View3D application build
+scripts/build_all.bat/.sh      # Build all components in sequence
 ```
 
 ## Project Structure
 
 ```
+├── .github/
+│   └── workflows/
+│       └── build-occt.yml     # GitHub Actions CI/CD workflow
 ├── scripts/
-│   ├── build_all.bat     # Build all components (Windows)
-│   ├── build_all.sh      # Build all components (Linux)
-│   ├── build_base.bat    # Build base image (Windows)
-│   ├── build_base.sh     # Build base image (Linux)
-│   ├── build_occt.bat    # Build OCCT image (Windows)
-│   ├── build_occt.sh     # Build OCCT image (Linux)
-│   ├── build_view3d.bat  # Build View3D image (Windows)
-│   └── build_view3d.sh   # Build View3D image (Linux)
+│   ├── build_*.bat/.sh        # Build scripts for different platforms
 ├── build/
-│   ├── Dockerfile.base   # Base Debian with build tools
-│   ├── Dockerfile.occt   # OCCT compilation and runtime
-│   └── Dockerfile.view3d # View3D application build
-├── src/
-│   ├── CMakeLists.txt    # Optimized View3D build configuration
-│   └── ...               # View3D source files
-├── CLAUDE.md             # Claude Code development guidance
-├── README.md             # This file
-├── README_zh.md          # Chinese documentation
-└── occt/                 # OCCT submodule (ignored)
+│   ├── Dockerfile             # Main multi-stage build
+│   ├── Dockerfile.base        # Base Debian with build tools
+│   ├── Dockerfile.occt        # OCCT compilation stage
+│   └── Dockerfile.view3d      # View3D application stage
+├── src/                       # View3D application source code
+├── occt/                      # OCCT submodule (v7.9.1)
+├── .gitattributes            # Git line ending configuration
+├── CLAUDE.md                 # Development guidance for Claude Code
+└── README.md                 # This file
 ```
+
+## Docker Images
+
+The build process creates these Docker images:
+
+- `pchuan98/debian-builder11` - Base Debian 11 with build tools
+- `pchuan98/occt` - OCCT libraries installed to `/opt/occt`
+- `pchuan98/view3d-arm64` - Complete View3D application
+
+## GitHub Actions CI/CD
+
+This repository includes automated Docker image building via GitHub Actions:
+
+### Workflow Features
+- **Automatic builds** on push to master branch
+- **Multi-architecture support** (ARM64 target)
+- **GitHub Container Registry** integration (`ghcr.io`)
+- **Build caching** for faster subsequent builds
+- **Pull request validation**
+
+### Triggered When
+- Changes to `build/Dockerfile`, `occt/**`, or workflow files
+- Pull requests to master branch
+- Manual workflow dispatch
+
+### Image Registry
+Built images are pushed to: `ghcr.io/[your-username]/[repository-name]/occt`
 
 ## Build Configuration
 
-### Docker Build Architecture
-
-1. **Base Stage** (`Dockerfile.base`): Debian 11 with build tools and dependencies
-2. **OCCT Stage** (`Dockerfile.occt`): OCCT compilation and runtime libraries
-3. **View3D Stage** (`Dockerfile.view3d`): Custom View3D application build
-
-### Build Dependencies
-
-- Base image provides: GCC, CMake, OpenGL ES, X11, and development libraries
-- OCCT libraries are compiled and installed to `/opt/occt`
-- View3D application links against optimized OCCT libraries
-
-### Build Features
-
-- **Target**: ARM64 (linux/arm64 platform)
-- **Base**: Debian 11 with optimized Chinese mirrors (USTC)
-- **Graphics**: OpenGL, OpenGL ES 3.2 enabled
-- **Libraries**: FreeImage, FreeType, RapidJSON support
-- **Optimization**: Multi-threaded build with parallel processing
-
-### CMake Configuration
-
+### CMake Options
 ```cmake
 -DCMAKE_BUILD_TYPE=Release
--DBUILD_SAMPLES=OFF
--DBUILD_TESTING=OFF
--DBUILD_DOC=OFF
+-DUSE_FREETYPE=ON
+-DUSE_FREEIMAGE=ON
 -DUSE_OPENGL=ON
 -DUSE_GLES2=ON
--DUSE_FREEIMAGE=ON
--DUSE_FREETYPE=ON
--DUSE_VTK=OFF
--DUSE_QT=OFF
--DUSE_RAPIDJSON=ON
+-DCMAKE_INSTALL_PREFIX=/opt/occt
 ```
 
-## Development Guidelines
+### Target Specifications
+- **Platform**: linux/arm64
+- **Base OS**: Debian 11 with USTC mirrors
+- **Graphics**: OpenGL, OpenGL ES 3.2 enabled
+- **Libraries**: FreeImage, FreeType, RapidJSON support
 
-### Naming Conventions
-- Use CamelCase style
-- English names only
+## Deployment to RK3566
 
-### Memory Management
-- Prefer smart pointers and standard collections
-- Avoid raw pointers for managed objects
+### Extract from Docker Container
+```bash
+# Create temporary container and extract built files
+docker run --rm -v $(pwd):/host pchuan98/occt bash -c "cp -r /opt/occt /host/occt-arm64"
+```
+
+### Transfer to Target Device
+```bash
+# Transfer to RK3566
+scp -r occt-arm64 user@rk3566-ip:/home/user/occt
+
+# Install on target device
+sudo mv /home/user/occt /opt/occt
+sudo chmod -R 755 /opt/occt
+export LD_LIBRARY_PATH=/opt/occt/lib:$LD_LIBRARY_PATH
+```
+
+### Test Installation
+```bash
+# Test OCCT on RK3566
+/opt/occt/bin/draw.sh
+
+# Test View3D application (if built)
+/opt/view3d/bin/view3d
+```
 
 ## Troubleshooting
 
 ### Docker Build Issues
+**Multi-architecture setup**:
+```bash
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+docker buildx create --name arm64-builder --use
+docker buildx inspect --bootstrap
+```
 
-**Certificate Errors**:
-- The build uses USTC mirrors for faster downloads in China
-- If certificate issues occur, check mirror configuration in `build/Dockerfile`
-
-**Build Failures**:
-- Build specific stages for debugging:
-  ```bash
-  docker buildx build --target base -t occt-base .
-  docker buildx build --target builder -t occt-builder .
-  ```
+**Build specific stages**:
+```bash
+docker buildx build --target debian11 -t occt-base .
+docker buildx build --target builder -t occt-builder .
+docker buildx build --target occt -t occt-runtime .
+```
 
 ### Runtime Issues on RK3566
-
-**OpenGL Issues**:
+**OpenGL verification**:
 ```bash
 # Install Mesa drivers
 sudo apt install mesa-utils libgl1-mesa-glx:arm64
@@ -171,36 +161,22 @@ sudo apt install mesa-utils libgl1-mesa-glx:arm64
 glxinfo | grep OpenGL
 ```
 
-**Dependency Errors**:
+**Dependency checking**:
 ```bash
 # Check missing libraries
 ldd /opt/occt/bin/draw.sh
 
-# Install required arm64 packages
+# Install required packages
 sudo apt install [missing-package]:arm64
 ```
 
-## Verification Steps
+## Build Optimization Features
 
-1. ✅ Enable multi-architecture support and buildx
-2. ✅ Confirm Docker image builds without certificate errors
-3. ✅ Verify all build stages complete successfully
-4. ✅ Check OCCT extraction from runtime stage works
-5. ✅ Test `draw.sh` runs on RK3566 with OpenGL
-6. ✅ Test sample OCCT models on target device
-
-## GPU Configuration Notes
-
-- **Mali G52**: Supports OpenGL ES 3.2 and Vulkan 1.1
-- **X11 Desktop**: Uses `-DUSE_OPENGL=ON`
-- **Wayland**: Consider `-DUSE_EGL=ON`
-
-## Build Optimization
-
-- Multi-stage build reduces final image size
-- USTC mirror provides faster package downloads in China
-- Shallow git clone reduces download time
-- Separate stages allow for better caching and debugging
+- **Multi-stage Docker build** reduces final image size
+- **USTC mirror** provides faster package downloads in China
+- **Build caching** via GitHub Actions cache
+- **Parallel compilation** using all available CPU cores
+- **Optimized dependencies** with minimal package installation
 
 ## Language Versions
 
@@ -211,7 +187,3 @@ This documentation is available in:
 ## License
 
 This project follows the licensing terms of Open CASCADE Technology (OCCT). Please refer to the OCCT documentation for specific licensing information.
-
-## Contributing
-
-Focus on project-specific files only. The `occt/` folder is a submodule and should be ignored. Custom functionality should be implemented in separate project directories.

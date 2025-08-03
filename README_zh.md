@@ -1,168 +1,158 @@
 # OCCT ARM64 跨平台编译项目
 
-本项目提供模块化的基于Docker的Open CASCADE Technology (OCCT)库和View3D应用程序ARM64架构交叉编译方案，特别针对搭载ARM Cortex-A55处理器和Mali G52 GPU的RK3566设备。
+本项目提供基于Docker的Open CASCADE Technology (OCCT)库和View3D应用程序ARM64架构交叉编译方案，特别针对搭载ARM Cortex-A55处理器和Mali G52 GPU的RK3566设备。
 
 ## 概述
 
 - **目标平台**: RK3566 (ARM Cortex-A55) 搭载 Mali G52 GPU
 - **操作系统**: Debian 11 ARM64 带XFCE4桌面环境
 - **图形支持**: OpenGL ES 3.2, Vulkan 1.1
-- **构建方式**: 模块化Docker多阶段交叉编译
-- **OCCT版本**: 7.8.1
+- **构建方式**: Docker多阶段交叉编译
+- **OCCT版本**: 7.9.1
 - **架构**: 三层构建系统 (基础 → OCCT → View3D)
 
 ## 前提条件
 
-- Windows 11 并启用WSL2
-- 已安装Docker
-- 可联网的RK3566目标设备
-- Docker多架构支持
+- 已安装Docker及buildx支持
+- 多架构Docker支持 (QEMU)
+- 可联网的RK3566目标设备（用于部署）
 
 ## 快速开始
 
-### 选项1: 构建所有组件 (推荐)
+### Docker跨平台编译
 
 ```bash
-# 按顺序构建所有组件
-scripts/build_all.bat     # Windows
-./scripts/build_all.sh    # Linux
+# Windows
+scripts\build_occt.bat
+
+# Linux
+./scripts/build_occt.sh
 ```
 
-### 选项2: 分别构建各组件
+这将使用`build/Dockerfile`构建OCCT ARM64 Docker镜像。
+
+### 可用构建脚本
 
 ```bash
-# 1. 构建基础Debian镜像
-scripts/build_base.bat     # Windows
-./scripts/build_base.sh    # Linux
-
-# 2. 构建OCCT库
-scripts/build_occt.bat     # Windows  
-./scripts/build_occt.sh    # Linux
-
-# 3. 构建View3D应用程序
-scripts/build_view3d.bat   # Windows
-./scripts/build_view3d.sh  # Linux
-```
-
-### 生成的Docker镜像
-
-- `pchuan98/debian-builder11` - 带构建工具的基础Debian
-- `pchuan98/occt` - OCCT库安装到 `/opt/occt`
-- `pchuan98/view3d-arm64` - 带View3D的完整应用程序
-
-### 部署到目标设备
-
-```bash
-# 传输View3D应用程序到RK3566
-scp -r view3d-arm64 user@rk3566-ip:/home/user/view3d
-
-# 在目标设备上安装
-sudo mv /home/user/view3d /opt/view3d
-sudo chmod -R 755 /opt/view3d
-export LD_LIBRARY_PATH=/opt/occt/lib:/opt/view3d/lib:$LD_LIBRARY_PATH
-```
-
-### 测试安装
-
-```bash
-# 在RK3566设备上 - 测试OCCT
-/opt/occt/bin/draw.sh
-
-# 测试View3D应用程序
-/opt/view3d/bin/view3d
+# 各组件构建
+scripts/build_base.bat/.sh     # 带构建工具的基础Debian 11
+scripts/build_occt.bat/.sh     # OCCT库编译
+scripts/build_view3d.bat/.sh   # View3D应用程序构建
+scripts/build_all.bat/.sh      # 按顺序构建所有组件
 ```
 
 ## 项目结构
 
 ```
+├── .github/
+│   └── workflows/
+│       └── build-occt.yml     # GitHub Actions CI/CD工作流
 ├── scripts/
-│   ├── build_all.bat     # 构建所有组件 (Windows)
-│   ├── build_all.sh      # 构建所有组件 (Linux)  
-│   ├── build_base.bat    # 构建基础镜像 (Windows)
-│   ├── build_base.sh     # 构建基础镜像 (Linux)
-│   ├── build_occt.bat    # 构建OCCT镜像 (Windows)
-│   ├── build_occt.sh     # 构建OCCT镜像 (Linux)
-│   ├── build_view3d.bat  # 构建View3D镜像 (Windows)
-│   └── build_view3d.sh   # 构建View3D镜像 (Linux)
+│   ├── build_*.bat/.sh        # 不同平台的构建脚本
 ├── build/
-│   ├── Dockerfile.base   # 带构建工具的基础Debian
-│   ├── Dockerfile.occt   # OCCT编译和运行时
-│   └── Dockerfile.view3d # View3D应用程序构建
-├── src/
-│   ├── CMakeLists.txt    # 优化的View3D构建配置
-│   └── ...               # View3D源文件
-├── CLAUDE.md             # Claude代码开发指南
-├── README.md             # 英文文档
-├── README_zh.md          # 中文文档
-└── occt/                 # OCCT子模块(忽略)
+│   ├── Dockerfile             # 主要多阶段构建
+│   ├── Dockerfile.base        # 带构建工具的基础Debian
+│   ├── Dockerfile.occt        # OCCT编译阶段
+│   └── Dockerfile.view3d      # View3D应用程序阶段
+├── src/                       # View3D应用程序源代码
+├── occt/                      # OCCT子模块 (v7.9.1)
+├── .gitattributes            # Git换行符配置
+├── CLAUDE.md                 # Claude代码开发指南
+└── README.md                 # 英文文档
 ```
+
+## Docker镜像
+
+构建过程创建以下Docker镜像：
+
+- `pchuan98/debian-builder11` - 带构建工具的基础Debian 11
+- `pchuan98/occt` - OCCT库安装到 `/opt/occt`
+- `pchuan98/view3d-arm64` - 完整View3D应用程序
+
+## GitHub Actions CI/CD
+
+本仓库包含通过GitHub Actions自动化Docker镜像构建：
+
+### 工作流特性
+- **自动构建** 当推送到master分支时
+- **多架构支持** (ARM64目标)
+- **GitHub容器注册表** 集成 (`ghcr.io`)
+- **构建缓存** 加速后续构建
+- **Pull Request验证**
+
+### 触发条件
+- 修改 `build/Dockerfile`、`occt/**` 或工作流文件
+- 针对master分支的Pull Request
+- 手动工作流调度
+
+### 镜像注册表
+构建的镜像推送到: `ghcr.io/[用户名]/[仓库名]/occt`
 
 ## 构建配置
 
-### Docker构建架构
-
-1. **基础阶段** (`Dockerfile.base`): 带构建工具和依赖的Debian 11
-2. **OCCT阶段** (`Dockerfile.occt`): OCCT编译和运行时库
-3. **View3D阶段** (`Dockerfile.view3d`): 自定义View3D应用程序构建
-
-### 构建依赖
-
-- 基础镜像提供: GCC, CMake, OpenGL ES, X11 和开发库
-- OCCT库编译并安装到 `/opt/occt`
-- View3D应用程序链接优化的OCCT库
-
-### 构建特性
-
-- **目标平台**: ARM64 (linux/arm64)
-- **基础镜像**: 使用USTC中国镜像源优化的Debian 11
-- **图形支持**: 启用OpenGL, OpenGL ES 3.2
-- **库支持**: FreeImage, FreeType, RapidJSON
-- **优化**: 多线程并行构建
-
-### CMake配置
-
+### CMake选项
 ```cmake
 -DCMAKE_BUILD_TYPE=Release
--DBUILD_SAMPLES=OFF
--DBUILD_TESTING=OFF
--DBUILD_DOC=OFF
+-DUSE_FREETYPE=ON
+-DUSE_FREEIMAGE=ON
 -DUSE_OPENGL=ON
 -DUSE_GLES2=ON
--DUSE_FREEIMAGE=ON
--DUSE_FREETYPE=ON
--DUSE_VTK=OFF
--DUSE_QT=OFF
--DUSE_RAPIDJSON=ON
+-DCMAKE_INSTALL_PREFIX=/opt/occt
 ```
 
-## 开发指南
+### 目标规格
+- **平台**: linux/arm64
+- **基础系统**: 使用USTC镜像源的Debian 11
+- **图形支持**: 启用OpenGL, OpenGL ES 3.2
+- **库支持**: FreeImage, FreeType, RapidJSON
 
-### 命名规范
-- 使用驼峰式命名
-- 仅使用英文命名
+## 部署到RK3566
 
-### 内存管理
-- 优先使用智能指针和标准容器
-- 避免对托管对象使用裸指针
+### 从Docker容器提取
+```bash
+# 创建临时容器并提取构建文件
+docker run --rm -v $(pwd):/host pchuan98/occt bash -c "cp -r /opt/occt /host/occt-arm64"
+```
+
+### 传输到目标设备
+```bash
+# 传输到RK3566
+scp -r occt-arm64 user@rk3566-ip:/home/user/occt
+
+# 在目标设备上安装
+sudo mv /home/user/occt /opt/occt
+sudo chmod -R 755 /opt/occt
+export LD_LIBRARY_PATH=/opt/occt/lib:$LD_LIBRARY_PATH
+```
+
+### 测试安装
+```bash
+# 在RK3566上测试OCCT
+/opt/occt/bin/draw.sh
+
+# 测试View3D应用程序（如果已构建）
+/opt/view3d/bin/view3d
+```
 
 ## 故障排除
 
 ### Docker构建问题
+**多架构设置**：
+```bash
+docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+docker buildx create --name arm64-builder --use
+docker buildx inspect --bootstrap
+```
 
-**证书错误**:
-- 构建使用USTC镜像源以加速中国区下载
-- 如遇证书问题，请检查`build/Dockerfile`中的镜像配置
-
-**构建失败**:
-- 分阶段调试构建:
-  ```bash
-  docker buildx build --target base -t occt-base .
-  docker buildx build --target builder -t occt-builder .
-  ```
+**构建特定阶段**：
+```bash
+docker buildx build --target debian11 -t occt-base .
+docker buildx build --target builder -t occt-builder .
+docker buildx build --target occt -t occt-runtime .
+```
 
 ### RK3566运行时问题
-
-**OpenGL问题**:
+**OpenGL验证**：
 ```bash
 # 安装Mesa驱动
 sudo apt install mesa-utils libgl1-mesa-glx:arm64
@@ -171,41 +161,29 @@ sudo apt install mesa-utils libgl1-mesa-glx:arm64
 glxinfo | grep OpenGL
 ```
 
-**依赖错误**:
+**依赖检查**：
 ```bash
 # 检查缺失的库
 ldd /opt/occt/bin/draw.sh
 
-# 安装所需的arm64软件包
+# 安装所需软件包
 sudo apt install [缺失的包]:arm64
 ```
 
-## 验证步骤
+## 构建优化特性
 
-1. ✅ 启用多架构支持和buildx
-2. ✅ 确认Docker镜像构建无证书错误
-3. ✅ 验证所有构建阶段成功完成
-4. ✅ 检查从运行时阶段提取OCCT是否正常
-5. ✅ 测试RK3566上`draw.sh`能否运行(带OpenGL)
-6. ✅ 在目标设备上测试OCCT示例模型
+- **多阶段Docker构建** 减小最终镜像体积
+- **USTC镜像源** 加速中国区下载
+- **通过GitHub Actions缓存** 构建缓存
+- **并行编译** 使用所有可用CPU核心
+- **优化依赖** 最小化软件包安装
 
-## GPU配置说明
+## 语言版本
 
-- **Mali G52**: 支持OpenGL ES 3.2和Vulkan 1.1
-- **X11桌面**: 使用`-DUSE_OPENGL=ON`
-- **Wayland**: 考虑`-DUSE_EGL=ON`
-
-## 构建优化
-
-- 多阶段构建减小最终镜像体积
-- USTC镜像源加速中国区下载
-- 浅克隆减少下载时间
-- 分离阶段便于缓存和调试
+本文档提供以下语言版本：
+- [English](README.md)
+- [中文](README_zh.md)
 
 ## 许可证
 
 本项目遵循Open CASCADE Technology (OCCT)的许可条款。具体许可信息请参考OCCT文档。
-
-## 贡献指南
-
-请仅关注项目特定文件。`occt/`文件夹是子模块，应忽略。自定义功能应在单独的项目目录中实现。
