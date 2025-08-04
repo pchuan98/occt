@@ -39,7 +39,33 @@ scripts/build_base.bat/.sh     # 带构建工具的基础Debian 11
 scripts/build_occt.bat/.sh     # OCCT库编译
 scripts/build_view3d.bat/.sh   # View3D应用程序构建
 scripts/build_all.bat/.sh      # 按顺序构建所有组件
+
+# 使用预编译OCCT镜像的本地构建
+scripts/local_build.bat        # 使用保存的OCCT镜像构建src文件
 ```
+
+### 使用预编译OCCT的本地构建
+
+使用`scripts/local_build.bat`脚本通过预编译的OCCT镜像构建您的src文件：
+
+```batch
+# 构建模式：编译src文件
+scripts\local_build.bat
+
+# 导出模式：将OCCT库导出到当前目录
+scripts\local_build.bat --export
+```
+
+**本地构建前提条件：**
+- Docker Desktop运行并支持WSL2
+- 在`temp/occt-image.tar`位置有OCCT镜像tar文件
+- 在`src/`目录中有源文件（构建模式需要）
+
+**功能特性：**
+- 使用持久化容器加速后续构建
+- 可配置构建并行数的并行编译
+- 将编译结果导出到`build-output/`目录
+- 可将OCCT库导出为`occt-arm64.tar.gz`压缩包
 
 ## 项目结构
 
@@ -66,8 +92,20 @@ scripts/build_all.bat/.sh      # 按顺序构建所有组件
 构建过程创建以下Docker镜像：
 
 - `pchuan98/debian-builder11` - 带构建工具的基础Debian 11
-- `pchuan98/occt` - OCCT库安装到 `/opt/occt`
+- `pchuan98/occt:v7.9.1` - OCCT库安装到 `/opt/occt`
 - `pchuan98/view3d-arm64` - 完整View3D应用程序
+
+### 保存Docker镜像
+
+将OCCT镜像保存为tar文件以供离线使用：
+
+```bash
+# 将OCCT镜像保存为tar文件
+docker save pchuan98/occt:v7.9.1 -o temp/occt-image.tar
+
+# 从tar文件加载镜像
+docker load -i temp/occt-image.tar
+```
 
 ## GitHub Actions CI/CD
 

@@ -39,7 +39,33 @@ scripts/build_base.bat/.sh     # Base Debian 11 with build tools
 scripts/build_occt.bat/.sh     # OCCT libraries compilation
 scripts/build_view3d.bat/.sh   # View3D application build
 scripts/build_all.bat/.sh      # Build all components in sequence
+
+# Local build using pre-compiled OCCT image
+scripts/local_build.bat        # Build src files using saved OCCT image
 ```
+
+### Local Build with Pre-compiled OCCT
+
+Use the `scripts/local_build.bat` script to build your src files using a pre-compiled OCCT image:
+
+```batch
+# Build mode: Compile src files
+scripts\local_build.bat
+
+# Export mode: Export OCCT library to current directory
+scripts\local_build.bat --export
+```
+
+**Prerequisites for local build:**
+- Docker Desktop running with WSL2 support
+- OCCT image tar file at `temp/occt-image.tar`
+- Source files in `src/` directory (for build mode)
+
+**Features:**
+- Uses persistent container for faster subsequent builds
+- Parallel compilation with configurable build parallelism
+- Exports compiled results to `build-output/` directory
+- Can export OCCT library as `occt-arm64.tar.gz` archive
 
 ## Project Structure
 
@@ -66,8 +92,20 @@ scripts/build_all.bat/.sh      # Build all components in sequence
 The build process creates these Docker images:
 
 - `pchuan98/debian-builder11` - Base Debian 11 with build tools
-- `pchuan98/occt` - OCCT libraries installed to `/opt/occt`
+- `pchuan98/occt:v7.9.1` - OCCT libraries installed to `/opt/occt`
 - `pchuan98/view3d-arm64` - Complete View3D application
+
+### Saving Docker Images
+
+To save the OCCT image to a tar file for offline use:
+
+```bash
+# Save OCCT image to tar file
+docker save pchuan98/occt:v7.9.1 -o temp/occt-image.tar
+
+# Load image from tar file
+docker load -i temp/occt-image.tar
+```
 
 ## GitHub Actions CI/CD
 
