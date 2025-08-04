@@ -2,13 +2,23 @@
 SETLOCAL ENABLEDELAYEDEXPANSION
 
 :: Local build using pre-compiled OCCT image
-:: Usage: local_build.bat
+:: Usage: local_build.bat [--export]
+::   --export: Export OCCT library to current directory
 
 SET OCCT_IMAGE=pchuan98/occt:v7.9.1
 SET CONTAINER_NAME=src-builder
 SET PLATFORM=linux/arm64
 SET BUILD_PARALLELISM=12
 SET TAR_FILE=temp/occt-image.tar
+
+:: Check for --export parameter
+SET EXPORT_MODE=0
+IF "%1"=="--export" (
+    SET EXPORT_MODE=1
+    echo Export mode: Will export OCCT library to current directory
+) ELSE (
+    echo Build mode: Will compile src files
+)
 
 echo Loading OCCT image from local tar file...
 
@@ -41,10 +51,12 @@ IF %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-:: Check if src directory exists
-IF NOT EXIST src (
-    echo ERROR: src directory not found. Please ensure source files are available.
-    exit /b 1
+:: Check if src directory exists (only in build mode)
+IF %EXPORT_MODE%==0 (
+    IF NOT EXIST src (
+        echo ERROR: src directory not found. Please ensure source files are available.
+        exit /b 1
+    )
 )
 
 :: Check if container already exists
@@ -63,17 +75,33 @@ IF !ERRORLEVEL! EQU 0 (
     docker start %CONTAINER_NAME%
 )
 
-:: Use persistent container for compilation
-echo Using container %CONTAINER_NAME% for compilation...
-docker exec %CONTAINER_NAME% bash -c "cd /workspace && cmake src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/workspace/build/install -DOpenCASCADE_DIR=/opt/occt/lib/cmake/opencascade && cmake --build build -j%BUILD_PARALLELISM% && cmake --install build"
-
-IF %ERRORLEVEL% NEQ 0 (
-    echo ERROR: Compilation failed. Check Docker output for details.
-    exit /b 1
+IF %EXPORT_MODE%==1 (
+    :: Export OCCT library mode
+    echo Exporting OCCT library from container...
+    IF NOT EXIST build-output mkdir build-output
+    
+    :: Create tar.gz archive inside container
+    echo Creating tar.gz archive of OCCT library...
+    docker exec %CONTAINER_NAME% bash -c "cd /opt && tar -czf /workspace/build/occt-arm64.tar.gz occt/"
+    IF !ERRORLEVEL! NEQ 0 (
+        echo ERROR: Failed to create tar archive.
+        exit /b 1
+    )
+    
+    echo.
+    echo SUCCESS: OCCT library exported successfully!
+    echo OCCT library tar.gz file: %cd%\build-output\occt-arm64.tar.gz
+) ELSE (
+    :: Use persistent container for compilation
+    echo Using container %CONTAINER_NAME% for compilation...
+    docker exec %CONTAINER_NAME% bash -c "cd /workspace && cmake src -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/workspace/build/install -DOpenCASCADE_DIR=/opt/occt/lib/cmake/opencascade && cmake --build build -j%BUILD_PARALLELISM% && cmake --install build"
+    IF !ERRORLEVEL! NEQ 0 (
+        echo ERROR: Compilation failed. Check Docker output for details.
+        exit /b 1
+    )
+    echo.
+    echo SUCCESS: Local build completed successfully!
+    echo Build results available in: %cd%\build-output
 )
-
-echo.
-echo SUCCESS: Local build completed successfully!
-echo Build results available in: %cd%\build-output
 
 ENDLOCAL
