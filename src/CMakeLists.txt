@@ -26,9 +26,9 @@ target_include_directories(View3DHandler PRIVATE
     ${X11_INCLUDE_DIRS}
 )
 
-# Essential OCCT libraries only
-set(OCCT_CORE_LIBS TKernel TKMath TKBRep TKV3d TKService TKGeomBase TKTopAlgo)
-set(OCCT_IO_LIBS TKDESTEP TKDEIGES TKDESTL)
+# Complete OCCT libraries (matching vcxproj configuration)
+set(OCCT_CORE_LIBS TKernel TKMath TKBO TKBRep TKFeat TKXSBase TKService TKV3d TKOffset TKPrim TKFillet TKBool TKTopAlgo TKGeomBase TKGeomAlgo TKG2d TKG3d TKShHealing)
+set(OCCT_IO_LIBS TKDEIGES TKDESTEP TKDESTL TKDEVRML)
 set(OCCT_CAF_LIBS TKLCAF TKCAF)
 
 # Link libraries
@@ -61,6 +61,8 @@ set_target_properties(View3DHandler PROPERTIES
     POSITION_INDEPENDENT_CODE ON
     INSTALL_RPATH "/opt/occt/lib"
     BUILD_WITH_INSTALL_RPATH TRUE
+    OUTPUT_NAME "View3DHandler"
+    PREFIX ""
 )
 
 target_compile_options(View3DHandler PRIVATE
