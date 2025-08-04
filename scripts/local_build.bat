@@ -67,7 +67,13 @@ IF !ERRORLEVEL! EQU 0 (
 ) ELSE (
     echo Creating new persistent container %CONTAINER_NAME%...
     IF NOT EXIST build-output mkdir build-output
-    docker create -v "%cd%/src":/workspace/src -v "%cd%/build-output":/workspace/build --platform %PLATFORM% --name %CONTAINER_NAME% %OCCT_IMAGE% tail -f /dev/null >nul
+    docker create ^
+        -v "%cd%/src":/workspace/src ^
+        -v "%cd%/build-output":/workspace/build ^
+        --platform %PLATFORM% ^
+        --name %CONTAINER_NAME% ^
+        %OCCT_IMAGE% ^
+        tail -f /dev/null >nul
     IF !ERRORLEVEL! NEQ 0 (
         echo ERROR: Failed to create container.
         exit /b 1
