@@ -25,7 +25,7 @@ RUN set -e && \
     rm -rf /var/lib/apt/lists/*
 
 # OCCT compilation and runtime image
-# docker buildx build --platform linux/arm64 -f build/Dockerfile.Debian11 --target occt -t pchuan98/occt11:v7.9.1 --load . --build-arg HTTPS_PROXY="" --build-arg HTTP_PROXY="" --build-arg BUILDKIT_MAX_PARALLELISM=12
+# docker buildx build --platform linux/arm64 -f build/Dockerfile.Debian10 --target occt -t pchuan98/occt10:v7.8.1 --load . --build-arg HTTPS_PROXY="" --build-arg HTTP_PROXY="" --build-arg BUILDKIT_MAX_PARALLELISM=12
 
 FROM debian AS builder
 

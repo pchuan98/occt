@@ -54,7 +54,6 @@ IF "%STEP%"=="all" OR "%STEP%"=="3" (
         --platform %PLATFORM% \
         -t %DOCKER_IMAGE% \
         --load \
-        --progress=plain \
         --build-arg BUILDKIT_MAX_PARALLELISM=%BUILD_PARALLELISM% \
         --build-arg HTTPS_PROXY="" \
         --build-arg HTTP_PROXY="" \
@@ -65,23 +64,10 @@ IF "%STEP%"=="all" OR "%STEP%"=="3" (
     )
 )
 
-:: Step 4: Extract artifacts
-IF "%STEP%"=="all" OR "%STEP%"=="4" (
-    echo [4/4] Extracting compiled libraries...
-    IF NOT EXIST occt-arm64 mkdir occt-arm64
-    docker run --rm -v "%cd%":/host %DOCKER_IMAGE% bash -c "cp -r /occt/build_dist /host/occt-arm64"
-    IF %ERRORLEVEL% NEQ 0 (
-        echo ERROR: Failed to extract artifacts from container.
-        exit /b 1
-    )
-)
-
 :: Completion message
 IF "%STEP%"=="all" (
     echo.
     echo SUCCESS: OCCT ARM64 build completed!
-    echo Compiled libraries are in: %cd%\occt-arm64
-    echo To deploy to RK3566 device, use the commands from README.md
 ) ELSE (
     echo.
     echo SUCCESS: Step %STEP% completed
