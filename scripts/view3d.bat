@@ -42,7 +42,7 @@ IF !ERRORLEVEL! NEQ 0 (
        echo Please ensure the compiled image tar file is available.
        exit /b 1
    )
-   
+
    :: Load OCCT image from tar file
    echo Loading OCCT image from %TAR_FILE%...
    docker load -i %TAR_FILE%
@@ -89,7 +89,7 @@ IF %EXPORT_MODE%==1 (
    :: Export OCCT library mode
    echo Exporting OCCT library from container...
    IF NOT EXIST build-output mkdir build-output
-   
+
    :: Create tar.gz archive inside container
    echo Creating tar.gz archive of OCCT library...
    docker exec %CONTAINER_NAME% bash -c "cd /opt && tar -czf /workspace/build/occt-arm64.tar.gz occt/"
@@ -97,7 +97,7 @@ IF %EXPORT_MODE%==1 (
        echo ERROR: Failed to create tar archive.
        exit /b 1
    )
-   
+
    echo.
    echo SUCCESS: OCCT library exported successfully!
    echo OCCT library tar.gz file: %cd%\build-output\occt-arm64.tar.gz

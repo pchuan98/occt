@@ -16,6 +16,5 @@ src/**/*.[hH][pP][pP]
 *.out
 
 build-output/*
-temp/occt-image.tar
+temp/
 *.vcxproj
-temp/debian11-occt-image.tar
