@@ -1,4 +1,6 @@
-# Base Debian 11 image with development tools
+# cd occt && git checkout V7_8_1
+
+# Base Debian 10 image with development tools
 # docker buildx build --platform linux/arm64 -f build/Dockerfile.Debian10 --target debian -t pchuan98/occt-debian:v10 --load . --build-arg HTTPS_PROXY="" --build-arg HTTP_PROXY="" --build-arg BUILDKIT_MAX_PARALLELISM=12
 # docker run -it --rm pchuan98/occt-debian:v10 /bin/bash
 

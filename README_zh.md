@@ -29,7 +29,7 @@ scripts\build_occt.bat
 ./scripts/build_occt.sh
 ```
 
-这将使用`build/Dockerfile`构建OCCT ARM64 Docker镜像。
+这将使用 `build/Dockerfile`构建OCCT ARM64 Docker镜像。
 
 ### 可用构建脚本
 
@@ -46,7 +46,7 @@ scripts/local_build.bat        # 使用保存的OCCT镜像构建src文件
 
 ### 使用预编译OCCT的本地构建
 
-使用`scripts/local_build.bat`脚本通过预编译的OCCT镜像构建您的src文件：
+使用 `scripts/local_build.bat`脚本通过预编译的OCCT镜像构建您的src文件：
 
 ```batch
 # 构建模式：编译src文件
@@ -57,15 +57,17 @@ scripts\local_build.bat --export
 ```
 
 **本地构建前提条件：**
+
 - Docker Desktop运行并支持WSL2
-- 在`temp/occt-image.tar`位置有OCCT镜像tar文件
-- 在`src/`目录中有源文件（构建模式需要）
+- 在 `temp/occt-image.tar`位置有OCCT镜像tar文件
+- 在 `src/`目录中有源文件（构建模式需要）
 
 **功能特性：**
+
 - 使用持久化容器加速后续构建
 - 可配置构建并行数的并行编译
-- 将编译结果导出到`build-output/`目录
-- 可将OCCT库导出为`occt-arm64.tar.gz`压缩包
+- 将编译结果导出到 `build-output/`目录
+- 可将OCCT库导出为 `occt-arm64.tar.gz`压缩包
 
 ## 项目结构
 
@@ -100,7 +102,7 @@ scripts\local_build.bat --export
 将OCCT镜像保存为tar文件以供离线使用：
 
 ```bash
-# 将OCCT镜像保存为tar文件
+D# 将OCCT镜像保存为tar文件
 docker save pchuan98/occt:v7.9.1 -o temp/occt-image.tar
 
 # 从tar文件加载镜像
@@ -112,6 +114,7 @@ docker load -i temp/occt-image.tar
 本仓库包含通过GitHub Actions自动化Docker镜像构建：
 
 ### 工作流特性
+
 - **自动构建** 当推送到master分支时
 - **多架构支持** (ARM64目标)
 - **GitHub容器注册表** 集成 (`ghcr.io`)
@@ -119,16 +122,19 @@ docker load -i temp/occt-image.tar
 - **Pull Request验证**
 
 ### 触发条件
+
 - 修改 `build/Dockerfile`、`occt/**` 或工作流文件
 - 针对master分支的Pull Request
 - 手动工作流调度
 
 ### 镜像注册表
+
 构建的镜像推送到: `ghcr.io/[用户名]/[仓库名]/occt`
 
 ## 构建配置
 
 ### CMake选项
+
 ```cmake
 -DCMAKE_BUILD_TYPE=Release
 -DUSE_FREETYPE=ON
@@ -139,6 +145,7 @@ docker load -i temp/occt-image.tar
 ```
 
 ### 目标规格
+
 - **平台**: linux/arm64
 - **基础系统**: 使用USTC镜像源的Debian 11
 - **图形支持**: 启用OpenGL, OpenGL ES 3.2
@@ -147,12 +154,14 @@ docker load -i temp/occt-image.tar
 ## 部署到RK3566
 
 ### 从Docker容器提取
+
 ```bash
 # 创建临时容器并提取构建文件
 docker run --rm -v $(pwd):/host pchuan98/occt bash -c "cp -r /opt/occt /host/occt-arm64"
 ```
 
 ### 传输到目标设备
+
 ```bash
 # 传输到RK3566
 scp -r occt-arm64 user@rk3566-ip:/home/user/occt
@@ -164,6 +173,7 @@ export LD_LIBRARY_PATH=/opt/occt/lib:$LD_LIBRARY_PATH
 ```
 
 ### 测试安装
+
 ```bash
 # 在RK3566上测试OCCT
 /opt/occt/bin/draw.sh
@@ -175,7 +185,9 @@ export LD_LIBRARY_PATH=/opt/occt/lib:$LD_LIBRARY_PATH
 ## 故障排除
 
 ### Docker构建问题
+
 **多架构设置**：
+
 ```bash
 docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 docker buildx create --name arm64-builder --use
@@ -183,6 +195,7 @@ docker buildx inspect --bootstrap
 ```
 
 **构建特定阶段**：
+
 ```bash
 docker buildx build --target debian11 -t occt-base .
 docker buildx build --target builder -t occt-builder .
@@ -190,7 +203,9 @@ docker buildx build --target occt -t occt-runtime .
 ```
 
 ### RK3566运行时问题
+
 **OpenGL验证**：
+
 ```bash
 # 安装Mesa驱动
 sudo apt install mesa-utils libgl1-mesa-glx:arm64
@@ -200,6 +215,7 @@ glxinfo | grep OpenGL
 ```
 
 **依赖检查**：
+
 ```bash
 # 检查缺失的库
 ldd /opt/occt/bin/draw.sh
@@ -219,6 +235,7 @@ sudo apt install [缺失的包]:arm64
 ## 语言版本
 
 本文档提供以下语言版本：
+
 - [English](README.md)
 - [中文](README_zh.md)
 

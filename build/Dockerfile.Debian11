@@ -1,3 +1,5 @@
+# cd occt && git checkout V7_9_1
+
 # Base Debian 11 image with development tools
 # docker buildx build --platform linux/arm64 -f build/Dockerfile.Debian11 --target debian -t pchuan98/occt-debian:v11 --load . --build-arg HTTPS_PROXY="" --build-arg HTTP_PROXY="" --build-arg BUILDKIT_MAX_PARALLELISM=12
 # docker run -it --rm pchuan98/occt-debian:v11 /bin/bash
@@ -54,7 +56,6 @@ RUN mkdir build && cd build && \
 
 FROM debian AS occt
 COPY --from=builder /occt/build_dist /opt/occt
-
 
 # FROM pchuan98/occt
 

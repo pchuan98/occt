@@ -18,3 +18,4 @@ src/**/*.[hH][pP][pP]
 build-output/*
 temp/
 *.vcxproj
+src/View3DShared.vcxitems

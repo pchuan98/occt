@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.13)
 project(View3DHandlerA VERSION 1.0.0 LANGUAGES CXX)
 
 # Find required packages
@@ -34,7 +34,7 @@ set(OCCT_CAF_LIBS TKLCAF TKCAF)
 # Link libraries
 target_link_libraries(View3DHandler PRIVATE
     ${OCCT_CORE_LIBS}
-    ${OCCT_IO_LIBS} 
+    ${OCCT_IO_LIBS}
     ${OCCT_CAF_LIBS}
     ${X11_LIBRARIES}
 )
@@ -69,6 +69,11 @@ target_compile_options(View3DHandler PRIVATE
     -Wall -Wextra
     $<$<CONFIG:Release>:-O3 -DNDEBUG>
     $<$<CONFIG:Debug>:-g -O0>
+
+    # ignore warn
+    $<$<CXX_COMPILER_ID:GNU>:-w>
+    $<$<CXX_COMPILER_ID:Clang>:-w>
+    $<$<CXX_COMPILER_ID:MSVC>:/w>
 )
 
 # Install targets
