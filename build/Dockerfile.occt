@@ -1,7 +1,7 @@
 # OCCT compilation and runtime image
 # docker buildx build --platform linux/arm64 -f build/Dockerfile.occt -t pchuan98/occt --load . --build-arg HTTPS_PROXY="" --build-arg HTTP_PROXY="" --build-arg BUILDKIT_MAX_PARALLELISM=12
 
-FROM pchuan98/debian-builder11 AS builder
+FROM pchuan98/debian-builder10 AS builder
 
 WORKDIR /occt
 COPY occt/ /occt/
@@ -17,11 +17,7 @@ RUN mkdir build && cd build && \
     make -j$(nproc) && \
     make install
 
-FROM pchuan98/debian-builder11
+FROM pchuan98/debian-builder10
 
 # Copy OCCT build artifacts from builder stage
 COPY --from=builder /occt/build_dist /opt/occt
-
-# Set runtime environment
-ENV LD_LIBRARY_PATH="/opt/occt/lib:$LD_LIBRARY_PATH"
-ENV PKG_CONFIG_PATH="/opt/occt/lib/pkgconfig:$PKG_CONFIG_PATH"

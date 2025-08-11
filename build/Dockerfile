@@ -1,9 +1,9 @@
 # docker buildx build --platform linux/arm64 -f build/Dockerfile --load . --build-arg HTTPS_PROXY="" --build-arg HTTP_PROXY="" --build-arg BUILDKIT_MAX_PARALLELISM=8
 
 ##################################################################################
-FROM debian:11 AS debian11
+FROM debian:10 AS debian10
 
-ARG MIRROR_URL=http://mirrors.tuna.tsinghua.edu.cn
+ARG MIRROR_URL=http://mirrors.aliyun.com/debian-archive/debian
 
 RUN set -e && \
     echo 'Acquire::http::Timeout "30";' > /etc/apt/apt.conf.d/99timeout && \
@@ -11,6 +11,9 @@ RUN set -e && \
     echo 'Acquire::ForceIPv4 "true";' >> /etc/apt/apt.conf.d/99timeout && \
     sed -i 's|http://deb.debian.org|'"${MIRROR_URL}"'|g' /etc/apt/sources.list && \
     sed -i 's|http://security.debian.org|'"${MIRROR_URL}"'|g' /etc/apt/sources.list && \
+    echo 'deb http://mirrors.aliyun.com/debian-archive/debian buster main contrib non-free' > /etc/apt/sources.list && \
+    echo 'deb http://mirrors.aliyun.com/debian-archive/debian-security buster/updates main contrib non-free' >> /etc/apt/sources.list && \
+    echo 'deb http://mirrors.aliyun.com/debian-archive/debian buster-updates main contrib non-free' >> /etc/apt/sources.list && \
     rm -f /var/lib/dpkg/info/libc-bin.* && \
     apt-get clean && \
     apt-get update && \
@@ -29,7 +32,7 @@ RUN set -e && \
     rm -rf /var/lib/apt/lists/*
 
 ##################################################################################
-FROM debian11 AS builder
+FROM debian10 AS builder
 
 WORKDIR /occt
 COPY occt/ /occt/
@@ -45,9 +48,9 @@ RUN mkdir build && cd build && \
     make -j$(nproc) && \
     make install
 
-FROM debian11 AS occt
+# FROM debian10 AS occt
 
-COPY --from=builder /occt/build_dist /opt/occt
+# COPY --from=builder /occt/build_dist /opt/occt
 
 ##################################################################################
 # FROM occt AS view3d

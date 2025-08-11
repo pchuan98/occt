@@ -3,7 +3,7 @@
 # Build base Debian builder image
 # Usage: ./build_base.sh
 
-DOCKER_IMAGE="pchuan98/debian-builder11"
+DOCKER_IMAGE="pchuan98/debian-builder10"
 PLATFORM="linux/arm64"
 BUILD_PARALLELISM=$(nproc)
 DOCKERFILE_PATH="build/Dockerfile.base"

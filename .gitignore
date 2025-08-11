@@ -18,3 +18,4 @@ src/**/*.[hH][pP][pP]
 build-output/*
 temp/occt-image.tar
 *.vcxproj
+temp/debian11-occt-image.tar

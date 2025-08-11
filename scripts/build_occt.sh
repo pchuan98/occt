@@ -3,7 +3,7 @@
 # Build OCCT libraries image
 # Usage: ./build_occt.sh
 
-DOCKER_IMAGE="pchuan98/occt"
+DOCKER_IMAGE="pchuan98/occt10:latest"
 PLATFORM="linux/arm64"
 BUILD_PARALLELISM=$(nproc)
 DOCKERFILE_PATH="build/Dockerfile.occt"
@@ -17,8 +17,8 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # Check if base image exists
-if ! docker image inspect pchuan98/debian-builder11 &> /dev/null; then
-    echo "ERROR: Base image pchuan98/debian-builder11 not found."
+if ! docker image inspect pchuan98/debian-builder10 &> /dev/null; then
+    echo "ERROR: Base image pchuan98/debian-builder10 not found."
     echo "Please run build_base.sh first."
     exit 1
 fi
@@ -30,7 +30,6 @@ docker buildx build \
     --platform "$PLATFORM" \
     -t "$DOCKER_IMAGE" \
     --load \
-    --progress=plain \
     --build-arg BUILDKIT_MAX_PARALLELISM="$BUILD_PARALLELISM" \
     --build-arg HTTPS_PROXY="" \
     --build-arg HTTP_PROXY="" \

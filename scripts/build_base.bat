@@ -4,9 +4,9 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 :: Build base Debian builder image
 :: Usage: build_base.bat
 
-SET DOCKER_IMAGE=pchuan98/debian-builder11
+SET DOCKER_IMAGE=pchuan98/debian-builder10
 SET PLATFORM=linux/arm64
-SET BUILD_PARALLELISM=12
+SET BUILD_PARALLELISM=6
 SET DOCKERFILE_PATH=build/Dockerfile.base
 
 echo Building base Debian builder image...
