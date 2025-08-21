@@ -47,9 +47,9 @@ RUN mkdir build && cd build && \
     cmake .. \
         -DCMAKE_BUILD_TYPE=Release \
         -DUSE_FREETYPE=ON \
-        -DUSE_FREEIMAGE=ON \
         -DUSE_OPENGL=ON \
         -DUSE_GLES2=ON \
+        -DUSE_FREEIMAGE=OFF \
         -DCMAKE_INSTALL_PREFIX=/occt/build_dist && \
     make -j$(nproc) && \
     make install
