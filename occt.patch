@@ -1,0 +1,94 @@
+diff --git a/src/Graphic3d/Graphic3d_CView.hxx b/src/Graphic3d/Graphic3d_CView.hxx
+index 05062a816a..35d5ddfc41 100644
+--- a/src/Graphic3d/Graphic3d_CView.hxx
++++ b/src/Graphic3d/Graphic3d_CView.hxx
+@@ -354,10 +354,11 @@ public:
+   //! Sets framebuffer object for offscreen rendering.
+   virtual void SetFBO(const Handle(Standard_Transient)& theFbo) = 0;
+ 
+-  //! Generate offscreen FBO in the graphic library.
++  //! Generate offscreen FBO in the graphic library, support MSAA samples.
+   //! If not supported on hardware returns NULL.
+   virtual Handle(Standard_Transient) FBOCreate(const Standard_Integer theWidth,
+-                                               const Standard_Integer theHeight) = 0;
++                                               const Standard_Integer theHeight,
++                                               const Standard_Integer theNbSamples = 0) = 0;
+ 
+   //! Remove offscreen FBO from the graphic library
+   virtual void FBORelease(Handle(Standard_Transient)& theFbo) = 0;
+diff --git a/src/OpenGl/OpenGl_View.cxx b/src/OpenGl/OpenGl_View.cxx
+index 3bb304f6d1..1e9ff5e28b 100644
+--- a/src/OpenGl/OpenGl_View.cxx
++++ b/src/OpenGl/OpenGl_View.cxx
+@@ -910,9 +910,10 @@ void OpenGl_View::SetFBO(const Handle(Standard_Transient)& theFbo)
+ //=================================================================================================
+ 
+ Handle(Standard_Transient) OpenGl_View::FBOCreate(const Standard_Integer theWidth,
+-                                                  const Standard_Integer theHeight)
++                                                  const Standard_Integer theHeight,
++                                                  const Standard_Integer theNbSamples)
+ {
+-  return myWorkspace->FBOCreate(theWidth, theHeight);
++  return myWorkspace->FBOCreate(theWidth, theHeight, theNbSamples);
+ }
+ 
+ //=================================================================================================
+diff --git a/src/OpenGl/OpenGl_View.hxx b/src/OpenGl/OpenGl_View.hxx
+index 146c8d457d..ef3e2b0014 100644
+--- a/src/OpenGl/OpenGl_View.hxx
++++ b/src/OpenGl/OpenGl_View.hxx
+@@ -179,10 +179,11 @@ public:
+   //! Sets framebuffer object for offscreen rendering.
+   Standard_EXPORT virtual void SetFBO(const Handle(Standard_Transient)& theFbo) Standard_OVERRIDE;
+ 
+-  //! Generate offscreen FBO in the graphic library.
++  //! Generate offscreen FBO in the graphic library, support MSAA samples, theNbSamples default 0.
+   //! If not supported on hardware returns NULL.
+   Standard_EXPORT virtual Handle(Standard_Transient) FBOCreate(const Standard_Integer theWidth,
+-                                                               const Standard_Integer theHeight)
++                                                               const Standard_Integer theHeight,
++                                                               const Standard_Integer theNbSamples = 0)
+     Standard_OVERRIDE;
+ 
+   //! Remove offscreen FBO from the graphic library
+diff --git a/src/OpenGl/OpenGl_Workspace.cxx b/src/OpenGl/OpenGl_Workspace.cxx
+index 7fb41164ea..a6e70b4b72 100644
+--- a/src/OpenGl/OpenGl_Workspace.cxx
++++ b/src/OpenGl/OpenGl_Workspace.cxx
+@@ -346,7 +346,8 @@ Standard_Integer OpenGl_Workspace::Height() const
+ //=================================================================================================
+ 
+ Handle(OpenGl_FrameBuffer) OpenGl_Workspace::FBOCreate(const Standard_Integer theWidth,
+-                                                       const Standard_Integer theHeight)
++                                                       const Standard_Integer theHeight,
++                                                       const Standard_Integer theNbSamples)
+ {
+   // activate OpenGL context
+   if (!Activate())
+@@ -360,10 +361,10 @@ Handle(OpenGl_FrameBuffer) OpenGl_Workspace::FBOCreate(const Standard_Integer th
+                           Graphic3d_Vec2i(theWidth, theHeight),
+                           GL_SRGB8_ALPHA8,
+                           GL_DEPTH24_STENCIL8,
+-                          0))
++                          theNbSamples))
+   {
+     aFrameBuffer->Release(aCtx.operator->());
+-    return Handle(OpenGl_FrameBuffer)();
++    return Handle(OpenGl_FrameBuffer)(); 
+   }
+   return aFrameBuffer;
+ }
+diff --git a/src/OpenGl/OpenGl_Workspace.hxx b/src/OpenGl/OpenGl_Workspace.hxx
+index a29ccdf843..e48c2643ac 100644
+--- a/src/OpenGl/OpenGl_Workspace.hxx
++++ b/src/OpenGl/OpenGl_Workspace.hxx
+@@ -50,7 +50,8 @@ public:
+   const Handle(OpenGl_Context)& GetGlContext() { return myGlContext; }
+ 
+   Standard_EXPORT Handle(OpenGl_FrameBuffer) FBOCreate(const Standard_Integer theWidth,
+-                                                       const Standard_Integer theHeight);
++                                                       const Standard_Integer theHeight,
++                                                       const Standard_Integer theNbSamples = 0);
+ 
+   Standard_EXPORT void FBORelease(Handle(OpenGl_FrameBuffer)& theFbo);
+ 
